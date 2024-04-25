@@ -48,9 +48,6 @@ class DQN_agent():
         grad[action] = -td_e * scale
         grad = torch.tensor([grad], dtype=torch.float32)
         output.backward(grad)
-        if abs(td_e*scale) > max_td_e:
-            max_td_e = abs(td_e*scale)
-        return td_e
 
     def set_conv(self, conv):
         self.conv = conv
@@ -131,7 +128,7 @@ class DQN_trainer():
                 data, weight, index = info
                 state, action, r, next_state, next_valid_actions = data
                 scale = weight# * self.sample_size
-                td_e = self.agent.learn(state, action, next_state, next_valid_actions, r, self.discount, scale=scale)
+                self.agent.learn(state, action, next_state, next_valid_actions, r, self.discount, scale=scale)
                 indices.append(index); priorities.append(abs(td_e))
             self.replay_buffer.priority_update(indices, priorities)
             nn.utils.clip_grad_norm_(self.agent.get_modelparameters(), 1.0)
