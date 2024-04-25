@@ -134,7 +134,7 @@ class DQN_trainer():
                 td_e = self.agent.learn(state, action, next_state, next_valid_actions, r, self.discount, scale=scale)
                 indices.append(index); priorities.append(abs(td_e))
             self.replay_buffer.priority_update(indices, priorities)
-            nn.utils.clip_grad_norm_(self.agent.get_modelparameters(), 2.0)
+            nn.utils.clip_grad_norm_(self.agent.get_modelparameters(), 1.0)
             self.opt.step()
             self.epsilon_scheduler.step()
             self.beta = min(self.beta + (1-self.beta)/epochs, 1)
