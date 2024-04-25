@@ -1,4 +1,4 @@
-import environments.pendulum as game
+import pendulum as game
 from DQN_agent import DQN_agent, DQN_trainer
 
 def plot(a):
