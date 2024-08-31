@@ -1,6 +1,7 @@
 # RL
 
-Implementations of REINFORCE, Actor Critic, and Proximal Policy Optimization from Pytorch and Numpy. Most methods are based off of the Stable Baselines 3 library.           
+Implementations of REINFORCE, Actor Critic, and Proximal Policy Optimization from Pytorch and Numpy. Most methods are based off of the Stable Baselines 3 library.     
+All demo files should work out of the box.
            
            
 Trained PPO agent playing flappy bird and single player slime volleyball:     
