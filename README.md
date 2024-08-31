@@ -18,7 +18,7 @@ slime_volleyball: WIP
 slime_volleyball_single_player: observation_space=6, action_space=4  (will have to make a custom model, default model doesn't work with images)         
 
 Note:      
-Main code *has* to be put into an "if __name__=='__main__'" statement or else multiprocessing will throw a fit.
+Main code *has* to be put into an "if \__name__=='\__main__'" statement or else multiprocessing will throw a fit.
 
 To Do:           
 Update REINFORCE and Actor Critic to work with updated vec_env_handler         
