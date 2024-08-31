@@ -13,7 +13,7 @@ cartpole: observation_space=4, action_space=3
 flappy_bird: observation_space=5, action_space=2           
 flappy_bird_img: observation_space=(40,30,40), action_space=2           
 slime_volleyball: WIP           
-slime_volleyball_single_player: observation_space=6, action_space=4           
+slime_volleyball_single_player: observation_space=6, action_space=4  (will have to make a custom model, default model doesn't work with images)         
 
 To Do:           
 Update REINFORCE and Actor Critic to work with updated vec_env_handler
