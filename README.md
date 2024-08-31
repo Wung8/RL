@@ -16,4 +16,5 @@ slime_volleyball: WIP
 slime_volleyball_single_player: observation_space=6, action_space=4  (will have to make a custom model, default model doesn't work with images)         
 
 To Do:           
-Update REINFORCE and Actor Critic to work with updated vec_env_handler
+Update REINFORCE and Actor Critic to work with updated vec_env_handler         
+Implement PPO with self play
