@@ -13,7 +13,8 @@ from PPO_agent import PPO
 def plot(a):
     lst = []
     for line in a.split('\n'):
-        lst.append(float(line.split(' ')[-1]))
+        try: lst.append(float(line.replace('#','').split(' ')[-1]))
+        except: pass
 
     temp = lst
     lst = []
