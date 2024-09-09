@@ -14,9 +14,9 @@ Trained PPO agent playing flappy bird and single player slime volleyball:
 Parameters of built in envs:           
 cartpole: observation_space=4, action_space=3           
 flappy_bird: observation_space=5, action_space=2           
-flappy_bird_img: observation_space=(40,30,40), action_space=2           
+flappy_bird_img: observation_space=(40,30,40), action_space=2   (will have to make a custom model, default model doesn't work with images)                 
 slime_volleyball: WIP           
-slime_volleyball_single_player: observation_space=6, action_space=4  (will have to make a custom model, default model doesn't work with images)         
+slime_volleyball_single_player: observation_space=6, action_space=4  
 
 Note:      
 Main code *has* to be put into an "if \__name__=='\__main__'" statement or else multiprocessing will throw a fit.
