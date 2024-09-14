@@ -21,6 +21,9 @@ slime_volleyball_single_player: observation_space=6, action_space=4
 Note:      
 Main code *has* to be put into an "if \_\_name__=='\_\_main__'" statement or else multiprocessing will throw a fit.
 
+RL Explanations: 
+https://docs.google.com/document/d/1sIpagn56Lj0PETUN_K0YCWtSnPrsWdvH9FDiSf9ZSZ8/edit
+
 To Do:           
 Update REINFORCE and Actor Critic to work with updated vec_env_handler         
 Implement PPO with self play
