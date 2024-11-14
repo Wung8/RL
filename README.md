@@ -4,7 +4,7 @@ Implementations of REINFORCE, Actor Critic, and Proximal Policy Optimization fro
 All demo files should work out of the box.
            
            
-Trained PPO agent playing flappy bird and single player slime volleyball:     
+Trained PPO agent playing flappy bird and slime volleyball:     
 
 ![Untitled video - Made with Clipchamp (1)](https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334)
            
