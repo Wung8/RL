@@ -8,7 +8,8 @@ Trained PPO agent playing flappy bird and slime volleyball:
 
 ![Untitled video - Made with Clipchamp (1)](https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334)
            
-![Untitled video - Made with Clipchamp](https://github.com/user-attachments/assets/4b3f1469-c287-4c1a-9070-da5fb07fbaf9)           
+![Untitled video - Made with Clipchamp (2)](https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e)
+
            
 
 Parameters of built in envs:           
