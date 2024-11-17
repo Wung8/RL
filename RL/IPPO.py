@@ -126,7 +126,7 @@ class IPPO():
         cumulative_reward = [0 for _ in range(len(self.agents))]
         env = self.env()
         obs_info = env.reset()
-        for step in range(steps):
+        for step in range(n_steps):
             obs_info = [np.array(obs, dtype=np.float32) for obs in obs_info]
             with torch.no_grad():
                 action_info = [
