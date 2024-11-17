@@ -16,4 +16,4 @@ if __name__ == "__main__":
 
     trainer.model.load_state_dict(torch.load(r"trained_networks\flappy_bird.pt"))
     while 1:        
-        print(trainer.test(display=True, steps=9999))
+        print(trainer.test(display=True, n_steps=9999))
