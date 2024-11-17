@@ -20,4 +20,4 @@ if __name__ == "__main__":
     right_slime.model = torch.load("trained_networks\\right_slime_actor.pth")
 
     while 1:
-        trainer.test(display=True, steps=9999)
+        trainer.test(display=True, n_steps=9999)
