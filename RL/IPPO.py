@@ -122,7 +122,7 @@ class IPPO():
 
             agent.rollout_buffer.compute_return_and_advantage(values, dones)
 
-    def test(self, display, steps=300, **kwargs):
+    def test(self, display, n_steps=300, **kwargs):
         cumulative_reward = [0 for _ in range(len(self.agents))]
         env = self.env()
         obs_info = env.reset()
