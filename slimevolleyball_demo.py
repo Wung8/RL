@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import time
 
+score = [0,0]
 env = SlimeEnvironment()
     
 left_slime = PPO(env=None,
@@ -34,8 +35,11 @@ while 1:
     u_trigger = False
     usr = 0
     while not done:
+        env.score = score
         update_usr()
         with torch.no_grad():
             ai, _, _ = right_slime.get_action(np.array(obs[1], dtype=np.float32))
         obs, r, done = env.step((usr,ai), display=True)
+    if r[0] == 1: score[0] += 1
+    else: score[1] += 1
     time.sleep(0.5)
