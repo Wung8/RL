@@ -69,18 +69,18 @@ class RolloutBuffer(BaseBuffer):
         self,
         buffer_size,
         observation_space,
-        action_space,
-        gae_lambda = 0.95,
-        discount = 0.99,
-        n_envs = 1,
-        device = "auto"
+        action_dim,
+        gae_lambda,
+        discount,
+        n_envs,
+        device
     ):
         self.buffer_size = buffer_size
         if isinstance(observation_space, int): # turn observation_space into iterable
             self.observation_space = (observation_space,)
         else:
             self.observation_space = observation_space
-        self.action_space = action_space
+        self.action_dim = action_dim
         self.gae_lambda = gae_lambda
         self.discount = discount
         self.n_envs = n_envs
@@ -90,7 +90,7 @@ class RolloutBuffer(BaseBuffer):
 
     def reset(self):
         self.observations = np.zeros((self.buffer_size, self.n_envs, *self.observation_space), dtype=np.float32)
-        self.actions = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
+        self.actions = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
         self.rewards = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
         self.dones = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
         self.returns = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
@@ -117,7 +117,7 @@ class RolloutBuffer(BaseBuffer):
             log_prob = log_prob.reshape(-1, 1)
 
         self.observations[self.pos] = np.array(obs)
-        self.actions[self.pos] = np.array(action)
+        self.actions[self.pos] = np.array(action).reshape(self.n_envs, self.action_dim)
         self.rewards[self.pos] = np.array(reward)
         self.dones[self.pos] = np.array(done)
         self.values[self.pos] = value.clone().cpu().numpy().flatten()
@@ -141,8 +141,8 @@ class RolloutBuffer(BaseBuffer):
 
     def get_samples(self, batch_inds):
         data = (
-            self.observations[batch_inds].reshape(-1,*self.observation_space),
-            self.actions[batch_inds].flatten(),
+            self.observations[batch_inds].reshape(-1, *self.observation_space),
+            self.actions[batch_inds].reshape(-1, self.action_dim),
             self.values[batch_inds].flatten(),
             self.log_probs[batch_inds].flatten(),
             self.advantages[batch_inds].flatten(),

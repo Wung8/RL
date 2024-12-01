@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-import scipy, random, time, math
+import scipy, math
 import matplotlib.pyplot as plt
 
 from RL.buffers import RolloutBuffer
@@ -12,6 +12,10 @@ from RL.vec_env_handler import ParallelEnvManager
 from RL.common_networks import (
     base_MLP_model,
     base_CNN_model,
+)
+from RL.distributions import (
+    CategoricalDistribution,
+    MultiCategoricalDistribution,
 )
 
 
@@ -41,10 +45,13 @@ class PPO():
 
         if isinstance(observation_space, int):
             observation_space = (observation_space,)
-
+        if isinstance(action_space, int):
+            action_space = (action_space,)
+    
         self.env = env
         self.observation_space = observation_space
         self.action_space = action_space
+        self.action_dim = len(action_space)
         self.lr = lr
         self.value_lr = value_lr
         self.n_steps = n_steps
@@ -67,19 +74,23 @@ class PPO():
         else: # create default model
             if len(observation_space) == 1:
                 self.model = base_MLP_model(input_space=observation_space, output_space=action_space)
-                self.value_net = base_MLP_model(input_space=observation_space, output_space=1)
+                self.value_net = base_MLP_model(input_space=observation_space, output_space=(1,))
             else:
                 self.model = base_CNN_model(input_space=observation_space, output_space=action_space)
-                self.value_net = base_CNN_model(input_space=observation_space, output_space=1)
+                self.value_net = base_CNN_model(input_space=observation_space, output_space=(1,))
             
         self.rollout_buffer = RolloutBuffer(buffer_size=n_steps,
                                             observation_space=observation_space,
-                                            action_space=action_space,
+                                            action_dim=self.action_dim,
                                             device=device,
                                             gae_lambda=gae_lambda,
                                             discount=discount,
                                             n_envs=n_envs,
                                             )
+        if self.action_dim == 1:
+            self.distribution = CategoricalDistribution
+        else:
+            self.distribution = MultiCategoricalDistribution
         self.opt = torch.optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-5)
         self.opt_value_net = torch.optim.Adam(self.value_net.parameters(), lr=self.value_lr, weight_decay=1e-5)
 
@@ -149,7 +160,7 @@ class PPO():
 
     def get_action(self, obs):
         action_prob, value = self.forward(torch.from_numpy(obs))
-        distribution = torch.distributions.Categorical(action_prob)
+        distribution = self.distribution(self.action_space, action_prob)
         action = distribution.sample()
         return action, distribution.log_prob(action), value
 
@@ -158,7 +169,7 @@ class PPO():
 
     def evaluate_actions(self, observations, actions):
         action_prob, values = self.forward(observations)
-        distribution = torch.distributions.Categorical(action_prob)
+        distribution = self.distribution(self.action_space, action_prob)
         log_prob = distribution.log_prob(actions)
         entropy = distribution.entropy()
         return values, log_prob, entropy
@@ -178,6 +189,8 @@ class PPO():
                 print(round(total_score/trials,3))
 
                 self.training_history.append(avg_score)
+            else:
+                print()
 
 
     def collect_rollouts(self, progress_bar):
@@ -189,7 +202,7 @@ class PPO():
             
         while not self.rollout_buffer.full:
             self.last_obs = np.array(self.last_obs, dtype=np.float32)
-            
+
             with torch.no_grad():
                 actions, log_probs, values = self.get_action(self.last_obs)
             new_obs, rewards, dones = self.env_manager.step(np.array(actions))
@@ -225,7 +238,9 @@ class PPO():
             obs = np.array(obs, dtype=np.float32)
             with torch.no_grad():
                 action, action_log_prob, _ = self.get_action(obs)
-            new_obs, reward, done = env.step(action.item(), display=display, **kwargs)
+            if self.action_dim == 1: action = action.item()
+            else: action = action.tolist()[0]
+            new_obs, reward, done = env.step(action, display=display, **kwargs)
             cumulative_reward += reward
             
             if done: break

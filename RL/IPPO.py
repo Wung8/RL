@@ -122,18 +122,18 @@ class IPPO():
 
             agent.rollout_buffer.compute_return_and_advantage(values, dones)
 
-    def test(self, display, n_steps=300, **kwargs):
+    def test(self, display, steps=300, **kwargs):
         cumulative_reward = [0 for _ in range(len(self.agents))]
         env = self.env()
         obs_info = env.reset()
-        for step in range(n_steps):
-            obs_info = [np.array(obs, dtype=np.float32) for obs in obs_info]
+        for step in range(steps):
+            obs_info = [np.array([obs], dtype=np.float32) for obs in obs_info]
             with torch.no_grad():
                 action_info = [
                     self.agents[_].get_action(obs_info[_])
                     for _ in range(len(self.agents))
                 ]
-            actions = [info[0] for info in action_info]
+            actions = [info[0][0] for info in action_info]
 
             return_info = env.step(actions, display=display)
             new_obs = return_info[0]
