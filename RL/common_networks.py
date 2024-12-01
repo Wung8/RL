@@ -11,6 +11,11 @@ def init_weights(model, gain='relu'):
             nn.init.orthogonal_(layer.weight, gain=nn.init.calculate_gain(gain))
             if layer.bias is not None:
                 nn.init.zeros_(layer.bias)
+    for layer in reversed(model):
+        if isinstance(layer, nn.Linear):
+            with torch.no_grad():
+                layer.weight.div_(100)
+            break
 
 def base_MLP_model(input_space, output_space):
     model = nn.Sequential(
@@ -18,9 +23,9 @@ def base_MLP_model(input_space, output_space):
       nn.Mish(),
       nn.Linear(64,64),
       nn.Mish(),
-      nn.Linear(64,output_space)
+      nn.Linear(64,sum(output_space))
     )
-    init_weights(model)
+    if sum(output_space) > 1: init_weights(model)
     return model
 
 def base_CNN_model(input_space, output_space):
@@ -36,16 +41,12 @@ def base_CNN_model(input_space, output_space):
     )
     with torch.no_grad():
         n_flatten = cnn(torch.zeros((1,*input_space))).shape[1]
-        
-    linear = nn.Sequential(
-        nn.Linear(n_flatten, 256),
-        nn.Mish(),
-        nn.Linear(256, output_space),
-    )
 
     model = nn.Sequential(
         cnn,
-        linear,
+        nn.Linear(n_flatten, 256),
+        nn.Mish(),
+        nn.Linear(256, sum(output_space)),
     )
-    init_weights(model)
+    if sum(output_space) > 1: init_weights(model)
     return model
