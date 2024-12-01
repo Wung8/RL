@@ -13,7 +13,6 @@ def turn_int(lst): return [int(i) for i in lst]
 
 class SlimeEnvironment:
     def __init__(self):
-        self.score = -1
         self.last_frame = time.time()
         self.framerate = 45
         self.dt = 0.1 # in game time passed per frame
@@ -76,20 +75,18 @@ class SlimeEnvironment:
                     ball_side = 2*int(self.ball.pos[0] > self.screen_size[0]/2) - 1
                     return (self.getInputs(), self.getInputs(left=False)), (ball_side, -ball_side), True
 
-        # reverse p2
-        if action2 == 2: action2 = 1
-        elif action2 == 1: action2 = 2
-
         # slime controls
         for i in range(2):
             action = [action1, action2][i]
             slime = [self.slime_left, self.slime_right][i]
 
-            match action:
+            match action[0]:
                 case 0: slime.vel[0] = 0
                 case 1: slime.vel[0] = -slime.move_speed
                 case 2: slime.vel[0] = slime.move_speed
-                case 3:
+            match action[1]:
+                case 0: pass
+                case 1:
                     if slime.pos[1]==self.ground_level:
                         slime.vel[1] = -slime.jump_height
 
@@ -183,19 +180,6 @@ class SlimeEnvironment:
         img = np.array([[self.colors['bg']]], dtype=np.uint8)
         img = img.repeat(self.screen_size[1],axis=0).repeat(self.screen_size[0],axis=1)
 
-        # display score
-        if self.score != -1:
-            for score, pos in zip(self.score, [(200,75),(600,75)]):
-                text = str(score)
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                fontScale = 1.2
-                color = (0, 0, 0)
-                thickness = 2
-                text_width, text_height = cv2.getTextSize(text, font, fontScale, thickness)[0]
-                org = np.subtract(pos, (text_width/2, text_height/2))
-                img = cv2.putText(img, text, (int(org[0]),int(org[1])), font,
-                                  fontScale, color, thickness, cv2.LINE_AA)
-
         # draw net
         img = cv2.rectangle(img,
                            (self.screen_size[0]//2-self.net_width, self.net_level),
@@ -282,13 +266,12 @@ def update_usr2():
 
 if __name__ == '__main__':
     env = SlimeEnvironment()
-    env.score = [0,0]
     c = 0
     while True:
         c += 1
         update_usr1()
         update_usr2()
-        obs, r, done = env.step([usr1, usr2], display=True)
+        obs, r, done = env.step(usr1, usr2, display=True)
         if done:
             print(r)
             time.sleep(0.5)
