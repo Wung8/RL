@@ -62,10 +62,11 @@ def update_usr():
 
     return actions
 
-num_players = int(input("how many humans? 1-2 "))
+num_players = int(input("how many humans? 0-2 "))
 player_idxs = []
 
-print('''
+if num_players != 0:
+    print('''
 player ids:
 |0   2|
 |1   3|
@@ -78,6 +79,8 @@ for i in range(num_players):
         print("p2 controls: move=arrow_keys, kick=.")
     usr = int(input("player id? 0-3 "))
     player_idxs.append(usr)
+
+print("starting game")
 
 while True:
     ai_idxs = [i for i in range(4) if i not in player_idxs]
