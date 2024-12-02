@@ -10,7 +10,7 @@ if __name__ == "__main__":
                   action_space=(3,3,2))
               for i in range(4)]
     for i in range(4):
-        agents[i].model = torch.load(f"trained_networks\\soccer_models\\soccer{i}.pt")
+        agents[i].model = torch.load(f"trained_networks\\soccer_models1\\soccer{i}.pt")
     
     trainer = IPPO(env=env,
                    agents=agents)
