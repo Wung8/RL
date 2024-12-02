@@ -144,7 +144,7 @@ class SoccerEnv:
         team_goal = ([50,850][player>1.5],300)
         opp_goal = ([850,50][player>1.5],300)
         return (
-            np.dot(delta_player, norm(np.subtract(self.ball_body.position, self.players[player].body.position))) * 0.004 * 0.2 # player moving to ball
+            np.dot(delta_player, norm(np.subtract(self.ball_body.position, self.players[player].body.position))) * 0.005 * 0.2 # player moving to ball
             + np.dot(delta_ball, norm( np.subtract(opp_goal, self.ball_body.position))
                      * math.pow( 1-(math.dist(opp_goal, self.ball_body.position) / 1500), 1 ) * 0.010 * 0.2 ) # ball moving to opponent's goal
             - np.dot(delta_ball, norm( np.subtract(team_goal, self.ball_body.position))
@@ -160,50 +160,34 @@ class SoccerEnv:
 
     # add distance inputs, ie distance from the goals, maybe distance from the players?
     def get_inputs(self, player):
+        idxs = [0,1,2,3]
+        if random.random() > 0.5: # swap opponents
+            if player > 1.5: idxs = [1,0,2,3]
+            else: idxs = [0,1,3,2]
+
+        p = self.players[player].body
         angles = []
-        for i in range(4):
+        dists = []
+        for i in idxs:
             if i == player: continue
-            angles += self.get_angle(self.players[player].body.position, self.players[i].body.position)
-        angles += self.get_angle(self.players[player].body.position, self.ball_body.position)
-        for goal in [(50,300),(850,300)]:
-            angles += self.get_angle(self.players[player].body.position, goal)
+            angles += self.get_angle(p.position, self.players[i].body.position)
+            dists += [math.dist(p.position, self.players[i].body.position) / 900]
+        angles += self.get_angle(p.position, self.ball_body.position)
+        for goal in [(50,225),(50,375),(850,225),(850,375)]:
+            angles += self.get_angle(p.position, goal)
+            dists += [math.dist(p.position, goal) / 900]
         return [
             *angles,
-            *self.players[0].get_inputs(),
-            *self.players[1].get_inputs(),
-            *self.players[2].get_inputs(),
-            *self.players[3].get_inputs(),
+            *dists,
+            *self.players[idxs[0]].get_inputs(),
+            *self.players[idxs[1]].get_inputs(),
+            *self.players[idxs[2]].get_inputs(),
+            *self.players[idxs[3]].get_inputs(),
             self.ball_body.position[0]/450-1,
             self.ball_body.position[1]/300-1,
             self.ball_body.velocity[0]/300,
             self.ball_body.velocity[1]/300
         ]
-##        side = int(player < 2.5)
-##        seed = random.randint(0,1)
-##        if player == 0:
-##            teammate = 1
-##            opponents = [2,3]
-##        if player == 1:
-##            teammate = 0
-##            opponents = [2,3]
-##        if player == 2:
-##            teammate = 3
-##            opponents = [0,1]
-##        if player == 3:
-##            teammate = 2
-##            opponents = [0,1]
-##        if seed:
-##            opponents = list(reversed(opponents))
-##        return [
-##            *self.players[player].get_inputs(),
-##            *self.players[teammate].get_inputs(),
-##            *self.players[opponents[0]].get_inputs(),
-##            *self.players[opponents[1]].get_inputs(),
-##            self.ball_body.position[0]/450-1,
-##            self.ball_body.position[1]/300-1,
-##            self.ball_body.velocity[0]/300,
-##            self.ball_body.velocity[1]/300
-##        ]
         
 
     def reset(self):
