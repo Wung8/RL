@@ -13,7 +13,7 @@ if __name__ == "__main__":
     n_envs = 32
     
     p1 = PPO(env=None,
-             observation_space=36,
+             observation_space=47,
              action_space=(3,3,2),
              lr = lr,
              value_lr = value_lr,
@@ -25,7 +25,7 @@ if __name__ == "__main__":
              n_envs=n_envs)
     
     p2 = PPO(env=None,
-             observation_space=36,
+             observation_space=47,
              action_space=(3,3,2),
              lr = lr,
              value_lr = value_lr,
@@ -37,7 +37,7 @@ if __name__ == "__main__":
              n_envs=n_envs)
 
     p3 = PPO(env=None,
-             observation_space=36,
+             observation_space=47,
              action_space=(3,3,2),
              lr = lr,
              value_lr = value_lr,
@@ -49,7 +49,7 @@ if __name__ == "__main__":
              n_envs=n_envs)
 
     p4 = PPO(env=None,
-             observation_space=36,
+             observation_space=47,
              action_space=(3,3,2),
              lr = lr,
              value_lr = value_lr,

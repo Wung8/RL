@@ -6,7 +6,7 @@ import torch
 if __name__ == "__main__":
     
     agents = [PPO(env=None,
-                  observation_space=36,
+                  observation_space=47,
                   action_space=(3,3,2))
               for i in range(4)]
     for i in range(4):
