@@ -16,7 +16,7 @@ agents = [PPO(env=None,
               n_steps=1)
           for i in range(4)]
 for i in range(4):
-    agents[i].model = torch.load(f"trained_networks\\soccer_models1\\soccer{i}.pt")
+    agents[i].model = torch.load(f"trained_networks\\soccer_models\\soccer{i}.pt")
 
 
 p_toggle = False
@@ -62,15 +62,35 @@ def update_usr():
 
     return actions
 
+num_players = int(input("how many humans? 1-2 "))
+player_idxs = []
+
+print('''
+player ids:
+|0   2|
+|1   3|
+''')
+
+for i in range(num_players):
+    if i == 0:
+        print("p1 controls: move=wasd, kick=t")
+    else:
+        print("p2 controls: move=arrow_keys, kick=.")
+    usr = int(input("player id? 0-3 "))
+    player_idxs.append(usr)
+
 while True:
+    ai_idxs = [i for i in range(4) if i not in player_idxs]
     obs = env.reset()
     done = False
     while not done:
         actions = []
-        actions.append(update_usr()[0])
-        for i in [1,2,3]:
+        for i in ai_idxs:
             with torch.no_grad():
                 ai, _, _ = agents[i].get_action(np.array(obs[i], dtype=np.float32))
             actions.append(ai.tolist()[0])
+        user_actions = update_usr()
+        for i in range(len(player_idxs)):
+            actions.insert(player_idxs[i], user_actions[i])
         obs, r, done = env.step(actions, display=True)
     time.sleep(0.5)
