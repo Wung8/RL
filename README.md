@@ -1,5 +1,8 @@
 # RL
 
+Currently under development, added PPO+LSTM, trying to find more robust hyperparameters for PPO+CNN+LSTM
+DAgger, PPO finetune, and IPPO+LSTM are most likely not working. 
+
 Implementations of PPO, IPPO, and DAgger from Pytorch and Numpy. Most methods are based on the Stable Baselines 3 library.     
 All demo files should work out of the box.
            
