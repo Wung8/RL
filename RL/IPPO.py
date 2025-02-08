@@ -52,7 +52,7 @@ class IPPO():
 
             if self.verbose:
                 trials = 10
-                total_score = [0 for _ in range(len(self.agents))]
+                total_score = [0 for _ in range(len(self.agents)+1)]
                 for trial in range(trials):
                     total_score = self.add_lists(total_score, self.test(display=False))
                 print(' '+' '.join(f"{x/trials:.3f}" for x in total_score))
@@ -143,7 +143,7 @@ class IPPO():
             if done: break                    
             obs_info = new_obs
 
-        return cumulative_reward
+        return cumulative_reward + [sum(cumulative_reward)]
 
 
     # training history not implemented yet, fix that first

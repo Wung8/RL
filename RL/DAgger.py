@@ -152,13 +152,13 @@ class DAgger():
 
     # forward actor and critic
     def forward(self, obs):
-        actions = F.softmax(self.model(obs), dim=-1)
+        actions = self.model(obs)
         values = self.value_net(obs)
         return actions, values
 
     def get_action(self, obs):
-        action_prob, value = self.forward(torch.from_numpy(obs))
-        distribution = torch.distributions.Categorical(action_prob)
+        action_logits, value = self.forward(torch.from_numpy(obs))
+        distribution = torch.distributions.Categorical(action_logits)
         action = distribution.sample()
         return action, distribution.log_prob(action), value
 

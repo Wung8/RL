@@ -1,6 +1,9 @@
 import numpy as np
 import torch
 
+from RL.type_aliases import LSTMStates
+
+
 class BaseBuffer():
 
     def __init__(
@@ -179,7 +182,129 @@ class RolloutBuffer(BaseBuffer):
 
         # td lambda
         self.returns = self.advantages + self.values
+
+class RecurrentRolloutBufferSamples(RolloutBufferSamples):
+    def __init__(
+        self,
+        observations,
+        actions,
+        values,
+        log_probs,
+        advantages,
+        returns,
+        lstm_states,
+        episode_starts,
+    ):
+        super().__init__(
+            observations,
+            actions,
+            values,
+            log_probs,
+            advantages,
+            returns
+        )
+        self.lstm_states = lstm_states
+        self.episode_starts = episode_starts
+
+class RecurrentRolloutBuffer(RolloutBuffer):
+
+    def __init__(
+        self,
+        buffer_size,
+        observation_space,
+        action_dim,
+        hidden_state_shape,
+        gae_lambda,
+        discount,
+        n_envs,
+        device
+    ):
+        self.hidden_state_shape = hidden_state_shape
+        super().__init__(
+            buffer_size,
+            observation_space,
+            action_dim,
+            gae_lambda,
+            discount,
+            n_envs,
+            device
+        )
+
+    def reset(self):
+        super().reset()
+        self.hidden_states_pi = np.zeros((self.buffer_size, *self.hidden_state_shape), dtype=np.float32)
+        self.cell_states_pi = np.zeros((self.buffer_size, *self.hidden_state_shape), dtype=np.float32)
+        self.hidden_states_vf = np.zeros((self.buffer_size, *self.hidden_state_shape), dtype=np.float32)
+        self.cell_states_vf = np.zeros((self.buffer_size, *self.hidden_state_shape), dtype=np.float32)
+
+    def add(
+        self,
+        obs: np.ndarray,
+        action: np.ndarray,
+        reward: np.ndarray,
+        done: np.ndarray,
+        value: torch.Tensor,
+        log_prob: torch.Tensor,
+        lstm_states: LSTMStates,
+        episode_starts: torch.Tensor
+    ):
+        self.hidden_states_pi[self.pos] = np.array(lstm_states.pi[0].detach().cpu().numpy())
+        self.cell_states_pi[self.pos] = np.array(lstm_states.pi[1].detach().cpu().numpy())
+        self.hidden_states_vf[self.pos] = np.array(lstm_states.vf[0].detach().cpu().numpy())
+        self.cell_states_vf[self.pos] = np.array(lstm_states.vf[1].detach().cpu().numpy())
         
+        super().add(
+            obs,
+            action,
+            reward,
+            done,
+            value,
+            log_prob
+        )
+
+    def get(self, sequence_length, sequence_stride, batch_size = None):
+        assert self.full, ""
+        start_indices = sequence_stride * \
+                            np.random.permutation(self.buffer_size // sequence_stride + 1 - int(np.ceil(sequence_length/sequence_stride)))
+
+        if batch_size is None:  # Return everything, don't create minibatches
+            batch_size = self.buffer_size
+
+        num_sequences = batch_size // sequence_length
+        start_idx = 0
+        while start_idx < len(start_indices):
+            yield self.get_samples(start_indices[start_idx:start_idx+num_sequences], sequence_length)
+            start_idx += num_sequences
+
+    def get_samples(self, batch_inds, sequence_length):
+        idxs = np.concatenate([batch_inds + step for step in range(sequence_length)])
+        data = (
+            self.observations[idxs].reshape(sequence_length, -1, *self.observation_space),
+            self.actions[idxs].reshape(-1, self.action_dim),
+            self.values[idxs].reshape(-1),
+            self.log_probs[idxs].flatten(),
+            self.advantages[idxs].flatten(),
+            self.returns[idxs].flatten(),
+        )
+        lstm_states = LSTMStates(
+            (self.to_torch(self.reshape_hidden(self.hidden_states_pi[batch_inds])), self.to_torch(self.reshape_hidden(self.cell_states_pi[batch_inds]))),
+            (self.to_torch(self.reshape_hidden(self.hidden_states_vf[batch_inds])), self.to_torch(self.reshape_hidden(self.cell_states_vf[batch_inds])))
+        )
+        episode_starts = self.to_torch(self.episode_starts[idxs].reshape(sequence_length, -1))
+        
+        return RecurrentRolloutBufferSamples(*tuple(map(self.to_torch, data)),
+                                             lstm_states,
+                                             episode_starts)
+
+    def reshape_hidden(self, hidden_state):
+        # (n_sequences, n_layers, n_envs, hidden_size) -> (n_layers, n_sequences, n_envs, hidden_size)
+        # (n_layers, n_sequences, n_envs, hidden_size) -> (n_layers, batch_size, hidden_size)
+        n_layers, n_envs, hidden_size = self.hidden_state_shape
+        hidden_state = hidden_state.transpose(1,0,2,3)
+        hidden_state = hidden_state.reshape(n_layers, -1, hidden_size)
+        return hidden_state
+        
+    
 
 class AggregatedDataset(BaseBuffer):
     def __init__(

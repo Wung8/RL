@@ -154,13 +154,13 @@ class PPO():
 
     # forward actor and critic
     def forward(self, obs):
-        actions = F.softmax(self.model(obs), dim=-1)
+        actions = self.model(obs)
         values = self.value_net(obs)
         return actions, values
 
     def get_action(self, obs):
-        action_prob, value = self.forward(torch.from_numpy(obs))
-        distribution = self.distribution(self.action_space, action_prob)
+        action_logits, value = self.forward(torch.from_numpy(obs))
+        distribution = self.distribution(self.action_space, action_logits)
         action = distribution.sample()
         return action, distribution.log_prob(action), value
 
@@ -168,8 +168,8 @@ class PPO():
         return self.value_net(torch.from_numpy(obs))
 
     def evaluate_actions(self, observations, actions):
-        action_prob, values = self.forward(observations)
-        distribution = self.distribution(self.action_space, action_prob)
+        action_logits, values = self.forward(observations)
+        distribution = self.distribution(self.action_space, action_logits)
         log_prob = distribution.log_prob(actions)
         entropy = distribution.entropy()
         return values, log_prob, entropy
@@ -178,20 +178,13 @@ class PPO():
     def learn(self, total_steps, progress_bar=True):
         num_steps = 0
         while num_steps < total_steps:
-            self.collect_rollouts(progress_bar=progress_bar)
+            score = self.collect_rollouts(progress_bar=progress_bar)
             num_steps += self.rollout_buffer.size()
             self.train()
 
-            if self.verbose:
-                trials = 10
-                total_score = sum([self.test(display=False) for i in range(trials)])
-                avg_score = total_score / trials
-                print(round(total_score/trials,3))
-
-                self.training_history.append(avg_score)
-            else:
-                print()
-
+            if self.verbose: print(round(score,3))
+            else: print()
+            self.training_history.append(score)
 
     def collect_rollouts(self, progress_bar):
         self.rollout_buffer.reset()
@@ -199,6 +192,8 @@ class PPO():
         progress = 0
         if progress_bar:
             print('#',end='')
+
+        total_rewards, total_dones = 0, 0
             
         while not self.rollout_buffer.full:
             self.last_obs = np.array(self.last_obs, dtype=np.float32)
@@ -215,6 +210,8 @@ class PPO():
                 values,
                 log_probs,
             )
+            total_rewards += sum(rewards)
+            total_dones += sum(dones)
             
             self.last_obs = new_obs
 
@@ -229,8 +226,9 @@ class PPO():
             values = self.get_values(self.last_obs)
 
         self.rollout_buffer.compute_return_and_advantage(values, dones)
+        return total_rewards/max(total_dones,1)
 
-    def test(self, display, n_steps=300, **kwargs):
+    def test(self, display, n_steps=1_000, **kwargs):
         cumulative_reward = 0
         env = self.env()
         obs = env.reset()
