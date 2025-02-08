@@ -1,6 +1,6 @@
-from environments.soccer import SoccerEnv as env
+from environments.soccer_randomized import SoccerEnv as env
 from RL.IPPO import IPPO
-from RL.Recurrent_PPO import Recurrent_PPO as PPO
+from RL.PPO import PPO
 
 if __name__ == "__main__":
     lr = 1e-4
