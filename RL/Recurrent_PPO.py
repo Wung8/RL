@@ -38,7 +38,7 @@ class Recurrent_PPO(PPO):
             batch_size = 256, # minibatch size
             sequence_length = 16, # sequence length for truncated backpropagation through time
             sequence_stride = 8, # timesteps between start of each truncated sequence
-            epochs = 10, # number of epochs 
+            epochs = 5, # number of epochs 
             clip_range = 0.2, # clip range for PPO
             discount = .97, # discount rate
             gae_lambda = 0.9, # td lambda for GAE

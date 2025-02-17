@@ -97,6 +97,7 @@ class PPO():
         if env != None:
             self.env_manager = ParallelEnvManager(self.env, self.n_envs)
             self.last_obs = self.env_manager.reset()
+            #assert isinstance(self.last_obs, np.ndarray) and self.last_obs.shape == self.observation_space, "check if env reset properly returns observation"
 
     def set_training_mode(self, training_mode):
         if training_mode:
@@ -182,7 +183,10 @@ class PPO():
             num_steps += self.rollout_buffer.size()
             self.train()
 
-            if self.verbose: print(round(score,3))
+            if self.verbose:
+                #test_score = sum([self.test(0,1000) for i in range(10)])/10
+                #print(round(score,3), round(test_score,3))
+                print(round(score,3))
             else: print()
             self.training_history.append(score)
 
