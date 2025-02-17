@@ -1,10 +1,11 @@
 import mss
 import numpy as np
-import time
+import time, math
 import winsound
 import cv2
 import pyautogui as pyg
 pyg.PAUSE = 0
+PAUSE = 0
 
 class GeoDashEnvironment:
     def __init__(self):
@@ -15,7 +16,7 @@ class GeoDashEnvironment:
         self.input_dims = (400,200)
         
         self.progress_bar_color = (3, 255, 127)
-        self.progress_bar_pos = (184, 10)
+        self.progress_bar_pos = (388, 19)
         self.last_trigger = False
         
         self.reset()
@@ -28,15 +29,15 @@ class GeoDashEnvironment:
             
         x, y = self.progress_bar_pos
         trigger_color = img_array[y][x]
-        if (trigger_color == self.progress_bar_color).all():
+        if math.dist(trigger_color, self.progress_bar_color) < 3:
             done = False
             self.last_trigger = True
         else:
             done = self.last_trigger
             self.last_trigger = False
         
-        img_array = cv2.resize(img_array, dsize=self.input_dims)
-        img_array = np.transpose(img_array, (2, 0, 1))
+        img_array = cv2.resize(img_array, dsize=self.input_dims, interpolation=cv2.INTER_AREA)
+        img_array = np.transpose(img_array, (2, 0, 1)) / 255
         return img_array, done
 
     def reset(self):
@@ -45,11 +46,12 @@ class GeoDashEnvironment:
         return observation
 
     def step(self, action, display=False):
-        if action == 1: pyg.press("space")
+        pyg.mouseUp(button='left')
+        if action == 1: pyg.mouseDown(button='left')
         time.sleep(max(0, self.framewait - (time.time()-self.lastframe) ))
         self.lastframe = time.time()
         observation, done = self.get_inputs()
-        return observation, 0.5 + (-5*done), done
+        return observation, 0.03 + (-0.23*done), done
 
     def display(self):
         pass

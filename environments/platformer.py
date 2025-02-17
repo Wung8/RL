@@ -22,22 +22,31 @@ class Rectangle:
 class PlatformerEnvironment:
     def __init__(self):
         self.screen_size = (800, 400)
+        self.camera_speed = 0.2
+        self.display_prev = False
         # everything is drawn onto surface and scaled up onto the screen
         self.surface = pygame.Surface(self.screen_size, pygame.SRCALPHA) 
-        self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE))
+        self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=pygame.HIDDEN)
         self.clock = pygame.time.Clock()
         self.max_tick = 120 # supports cycles of 1,2,3,4,5,6,8,9,...
         self.tick = 0
 
         self.player = Player(self)
 
-        self.death_zone = (1000, -200)
+        self.death_zone = (100000, -200)
         self.platforms = [
-            Platform(self, (400,150), (300,20)),
-            Platform(self, (550,250), (20,200)),
-            Platform(self, (500,210), (20,20)),
-            Platform(self, (300,220), (100,20)),
-            Platform(self, (270,290), (40,20))
+            Platform(self, (850,160), (1200,20)),
+            Platform(self, (250,250), (20,200)),
+            Platform(self, (600,180), (80,40)),
+            Platform(self, (1000,180), (280,40)),
+            Platform(self, (950,220), (80,60)),
+            Platform(self, (1150,200), (80,60)),
+            Platform(self, (1350,210), (80,90)),
+            Platform(self, (1400,180), (60,40)),
+            Platform(self, (1550,240), (80,20)),
+            Platform(self, (1700,220), (60,20)),
+            Platform(self, (1800,260), (40,20)),
+            Platform(self, (2100,160), (300,20)),
         ]
 
         self.reset()
@@ -45,27 +54,59 @@ class PlatformerEnvironment:
     def reset(self):
         self.tick = 0
         self.player.reset()
+        self.camera_center = np.subtract(self.player.pos, np.rint(np.multiply(self.screen_size, 0.5)))
+
+        self.player_max_x = self.player.pos[0]
+        self.time_since_last_progress = 0
+        return self.display(display=False)
 
     # take input and process frame
     def step(self, actions, display=False):
+        if self.display_prev != display:
+            self.display_prev = display
+            self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=[pygame.HIDDEN, pygame.SHOWN][display])
         self.tick += 1
         if self.tick == self.max_tick: self.tick = 0
         self.player.step(actions)
+        done = 0
+        reward = max(self.player.pos[0] - self.player_max_x, 0) / 100
+        if self.player.pos[0] > self.player_max_x:
+            self.player_max_x = self.player.pos[0]
+            self.time_since_last_progress = 0
+        self.time_since_last_progress += 1
         if abs(self.player.pos[0]) > self.death_zone[0] or self.player.pos[1] < self.death_zone[1]:
-            self.reset()
+            done = 1
+            reward = -0.5
+        if self.time_since_last_progress >= 250:
+            done = 1
+            reward = -0.5
+        if self.player.pos[0] >= 2100:
+            done = 1
+            reward = 0.5
         
         if display: self.display()
+
+        self.camera_center = self.camera_speed * np.subtract(self.player.pos, np.rint(np.multiply(self.screen_size, 0.5))) \
+                             + (1-self.camera_speed) * self.camera_center
+        obs = self.display(display=False)
+
+        return obs, reward, done
         
-    def display(self):
+    def display(self, display=True):
         pygame.event.pump()
         self.surface.fill(COLORS['bg'])
 
         for platform in self.platforms:
-            platform.display()
-
-        self.player.display()
+            platform.display(self.camera_center)
+        self.player.display(self.camera_center)
 
         self.surface = pygame.transform.flip(self.surface, False, True)
+
+        if display==False:
+            obs = pygame.transform.scale(self.surface, (80,80))
+            obs = np.transpose(pygame.surfarray.array3d(obs), (2,0,1))
+            return obs
+            
         pygame.transform.scale(self.surface, (np.multiply(self.screen_size, SCALE)), self.screen)
         pygame.display.flip()
         self.clock.tick(60)
@@ -115,8 +156,8 @@ class Platform:
         self.pos = pos
         self.dims = dims
 
-    def display(self):
-        rect = pygame.Rect(self.pos[0]-self.dims[0]/2, self.pos[1]-self.dims[1]/2, *self.dims)
+    def display(self, camera_center):
+        rect = pygame.Rect(self.pos[0]-self.dims[0]/2-camera_center[0], self.pos[1]-self.dims[1]/2-camera_center[1], *self.dims)
         pygame.draw.rect(self.parent.surface, COLORS['ground'], rect)
 
     def get_rect(self):
@@ -152,7 +193,7 @@ class Player:
             self.jumping_flag = False
 
         # if jump pressed and not dashing
-        if actions[1] == 2:
+        if actions[1] == 1:
             if self.jump_flag:
                 self.jump_flag = False
                 self.vel = (self.vel[0],self.jump_power)
@@ -173,8 +214,8 @@ class Player:
         self.actions = actions
         self.parent.update_position(self)
         
-    def display(self):
-        rect = pygame.Rect(self.pos[0]-self.dims[0]/2, self.pos[1]-self.dims[1]/2, *self.dims)
+    def display(self, camera_center):
+        rect = pygame.Rect(self.pos[0]-self.dims[0]/2-camera_center[0], self.pos[1]-self.dims[1]/2-camera_center[1], *self.dims)
         pygame.draw.rect(self.parent.surface, COLORS['player'], rect)
 
     def get_rect(self):
@@ -211,9 +252,18 @@ def get_user_actions():
 if __name__ == '__main__':
     pygame.init()
     env = PlatformerEnvironment()
+    c = 0
+    total_r = 0
     while True:
+        c += 1
         actions = get_user_actions()
-        _ = env.step(actions, display=True)
+        obs, rew, done = env.step(actions, display=True)
+        total_r += rew
+        if done:
+            env.reset()
+            print(c, total_r)
+            c, total_r = 0, 0
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
