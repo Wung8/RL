@@ -5,8 +5,8 @@ from environments.flappy_bird_img_nostack import FlappyBirdEnvironment as env
 from RL.Recurrent_PPO import Recurrent_PPO as PPO
 
 hyperparams = {
-    "lr" = (1e-5, 3e-5, 1e-4, 3e-4),
-    "batch_size" = (128, 256, 512, 1024),
+    "lr" = (3e-5, 1e-4, 3e-4),
+    "batch_size" = (128, 256, 512),
     "n_envs" = (8, 16, 24),
     "epochs" = (5, 10, 15),
 }
