@@ -13,6 +13,8 @@ Trained PPO agents:
            
 ![Untitled video - Made with Clipchamp (2)](https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e)
 
+![soccer](https://github.com/user-attachments/assets/6bd796e8-c69d-45bd-96c4-d5536f0b03b5)
+
 ![TMaze (2)](https://github.com/user-attachments/assets/70b5ddd1-9411-4745-a64f-4fc37b7ee304)
 
 ![platformer](https://github.com/user-attachments/assets/1e846568-a62c-4a3e-b7bd-c73c5c867535)
