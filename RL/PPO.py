@@ -30,12 +30,12 @@ class PPO():
             value_lr = 3e-4, # learning rate of critic (larger than actor)
             n_steps = 4000, # number of steps to train per batch of games
             batch_size = 250, # minibatch size
-            epochs = 10, # number of epochs 
+            epochs = 7, # number of epochs 
             clip_range = 0.2, # clip range for PPO
-            discount = .97, # discount rate
-            gae_lambda = 0.9, # td lambda for GAE
+            discount = .99, # discount rate
+            gae_lambda = 0.95, # td lambda for GAE
             normalize_advantage = True, # normalize advantage (in this case returns)
-            ent_coef = 1e-4, # entropy coefficient
+            ent_coef = 5e-3, # entropy coefficient
             max_grad_norm = 0.5, # max gradient norm when clipping
             verbose = True, # use print statements
             models = None, # default none, can specify model
@@ -97,6 +97,7 @@ class PPO():
         if env != None:
             self.env_manager = ParallelEnvManager(self.env, self.n_envs)
             self.last_obs = self.env_manager.reset()
+            #assert isinstance(self.last_obs, np.ndarray) and self.last_obs.shape == self.observation_space, "check if env reset properly returns observation"
 
     def set_training_mode(self, training_mode):
         if training_mode:
@@ -211,7 +212,7 @@ class PPO():
                 log_probs,
             )
             total_rewards += sum(rewards)
-            total_dones += sum(dones)
+            total_dones += abs(sum(dones))
             
             self.last_obs = new_obs
 
@@ -228,21 +229,25 @@ class PPO():
         self.rollout_buffer.compute_return_and_advantage(values, dones)
         return total_rewards/max(total_dones,1)
 
-    def test(self, display, n_steps=1_000, **kwargs):
+    def test(self, n_steps=1_000, **kwargs):
         cumulative_reward = 0
-        env = self.env()
-        obs = env.reset()
+        env = self.env(**kwargs)
+        obs, info = env.reset()
         for step in range(n_steps):
             obs = np.array(obs, dtype=np.float32)
             with torch.no_grad():
                 action, action_log_prob, _ = self.get_action(obs)
             if self.action_dim == 1: action = action.item()
             else: action = action.tolist()[0]
-            new_obs, reward, done = env.step(action, display=display, **kwargs)
+            new_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
+            
             cumulative_reward += reward
             
             if done: break
             obs = new_obs
+
+        env.close()
 
         return cumulative_reward
 

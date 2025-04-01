@@ -34,16 +34,16 @@ class Recurrent_PPO(PPO):
             n_lstm_layers = 1, # number of LSTM layers 
             lr = 1e-4, # learning rate of actor
             value_lr = 3e-4, # learning rate of critic (larger than actor)
-            n_steps = 4096, # number of steps to train per batch of games
-            batch_size = 256, # minibatch size
+            n_steps = 4000, # number of steps to train per batch of games
+            batch_size = 250, # minibatch size
             sequence_length = 16, # sequence length for truncated backpropagation through time
             sequence_stride = 8, # timesteps between start of each truncated sequence
-            epochs = 10, # number of epochs 
+            epochs = 7, # number of epochs 
             clip_range = 0.2, # clip range for PPO
-            discount = .97, # discount rate
-            gae_lambda = 0.9, # td lambda for GAE
+            discount = .99, # discount rate
+            gae_lambda = 0.95, # td lambda for GAE
             normalize_advantage = True, # normalize advantage (in this case returns)
-            ent_coef = 1e-4, # entropy coefficient
+            ent_coef = 5e-3, # entropy coefficient
             max_grad_norm = 0.5, # max gradient norm when clipping
             verbose = True, # use print statements
             models = None, # default none, can specify model
@@ -245,7 +245,7 @@ class Recurrent_PPO(PPO):
                 episode_starts = torch.tensor(self.last_episode_starts, dtype=torch.float32)
                 actions, log_probs, values, lstm_states = self.get_action(self.last_obs, lstm_states, episode_starts)
             new_obs, rewards, dones = self.env_manager.step(np.array(actions))
-            
+
             self.rollout_buffer.add(
                 self.last_obs,
                 actions,
@@ -276,10 +276,10 @@ class Recurrent_PPO(PPO):
         self.rollout_buffer.compute_return_and_advantage(values, dones)
         return total_rewards/max(total_dones,1)
 
-    def test(self, display, n_steps=300, **kwargs):
+    def test(self, n_steps=1_000, **kwargs):
         cumulative_reward = 0
-        env = self.env()
-        obs = env.reset()
+        env = self.env(**kwargs)
+        obs, info = env.reset()
         hidden_state_shape = list(self.hidden_state_shape)
         hidden_state_shape[1] = 1
         lstm_states = LSTMStates(
@@ -300,11 +300,15 @@ class Recurrent_PPO(PPO):
                 action, log_probs, values, lstm_states = self.get_action(np.expand_dims(obs,0), lstm_states, episode_starts)
             if self.action_dim == 1: action = action.item()
             else: action = action.tolist()[0]
-            new_obs, reward, done = env.step(action, display=display, **kwargs)
+            new_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
+            
             cumulative_reward += reward
             
             if done: break
             obs = new_obs
+
+        env.close()        
 
         return cumulative_reward
 

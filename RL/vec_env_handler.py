@@ -13,18 +13,22 @@ def env_worker(pipe, env):
     while True:
         cmd, action = pipe.recv()
         if cmd == 'step':
-            obs, reward, done = env.step(action)
-            if done:
-                obs = env.reset()
+            obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated | truncated
+            try:
+                if done:
+                    obs, info = env.reset()
+            except:
+                pass
             pipe.send((obs, reward, done))
         elif cmd == 'reset':
-            obs = env.reset()
+            obs, info = env.reset()
             pipe.send(obs)
         elif cmd == 'get_expert_actions':
             action = env.get_expert_action()
             pipe.send(action)
         elif cmd == 'close':
-            #env.close()
+            env.close()
             pipe.close()
             break
 
@@ -97,3 +101,4 @@ class ParallelEnvManager:
             pipe.send(('close', None))
         for process in self.processes:
             process.join()
+
