@@ -10,11 +10,7 @@ To Do: DAgger, PPO finetune, and IPPO+LSTM are not working right now, however I'
 Implementations of PPO, IPPO, and DAgger from Pytorch and Numpy. Most methods are based on the Stable Baselines 3 library.     
            
            
-Trained PPO agents:           
-
-https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334
-           
-https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e
+Trained PPO agents (deleted some of the clips whoops):           
 
 https://github.com/user-attachments/assets/3758b081-8522-4acb-8ec8-cdfcba9e77c5
 
