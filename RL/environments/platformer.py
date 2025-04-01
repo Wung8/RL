@@ -20,13 +20,15 @@ class Rectangle:
         self.dim = dim
 
 class PlatformerEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="None"):
+        self.render_mode = render_mode
         self.screen_size = (800, 400)
         self.camera_speed = 0.2
         self.display_prev = False
         # everything is drawn onto surface and scaled up onto the screen
         self.surface = pygame.Surface(self.screen_size, pygame.SRCALPHA) 
-        self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=pygame.HIDDEN)
+        self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE),
+                      flags=[pygame.HIDDEN, pygame.SHOWN][render_mode=="human"])
         self.clock = pygame.time.Clock()
         self.max_tick = 120 # supports cycles of 1,2,3,4,5,6,8,9,...
         self.tick = 0
@@ -58,13 +60,10 @@ class PlatformerEnvironment:
 
         self.player_max_x = self.player.pos[0]
         self.time_since_last_progress = 0
-        return self.display(display=False)
+        return self.display(display=False), {}
 
     # take input and process frame
-    def step(self, actions, display=False):
-        if self.display_prev != display:
-            self.display_prev = display
-            self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=[pygame.HIDDEN, pygame.SHOWN][display])
+    def step(self, actions):
         self.tick += 1
         if self.tick == self.max_tick: self.tick = 0
         self.player.step(actions)
@@ -84,13 +83,13 @@ class PlatformerEnvironment:
             done = 1
             reward = 0.5
         
-        if display: self.display()
+        if self.render_mode == "human": self.display()
 
         self.camera_center = self.camera_speed * np.subtract(self.player.pos, np.rint(np.multiply(self.screen_size, 0.5))) \
                              + (1-self.camera_speed) * self.camera_center
         obs = self.display(display=False)
 
-        return obs, reward, done
+        return obs, reward, done, 0, {}
         
     def display(self, display=True):
         pygame.event.pump()
@@ -103,8 +102,7 @@ class PlatformerEnvironment:
         self.surface = pygame.transform.flip(self.surface, False, True)
 
         if display==False:
-            obs = pygame.transform.scale(self.surface, (80,80))
-            obs = np.transpose(pygame.surfarray.array3d(obs), (2,0,1))
+            obs = pygame.surfarray.array3d(self.surface)
             return obs
             
         pygame.transform.scale(self.surface, (np.multiply(self.screen_size, SCALE)), self.screen)
@@ -148,6 +146,8 @@ class PlatformerEnvironment:
 
         return not (right1 < left2 or right2 < left1 or bottom1 < top2 or bottom2 < top1)
 
+    def close(self):
+        pygame.close()
 
 class Platform:
     # inputs: parent, center, (w,h)
@@ -251,13 +251,13 @@ def get_user_actions():
         
 if __name__ == '__main__':
     pygame.init()
-    env = PlatformerEnvironment()
+    env = PlatformerEnvironment(render_mode="human")
     c = 0
     total_r = 0
     while True:
         c += 1
         actions = get_user_actions()
-        obs, rew, done = env.step(actions, display=True)
+        obs, rew, done,_,_ = env.step(actions)
         total_r += rew
         if done:
             env.reset()

@@ -12,7 +12,8 @@ def mag(lst): return math.sqrt(sum(i**2 for i in lst))
 def turn_int(lst): return [int(i) for i in lst]
 
 class SlimeEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="None"):
+        self.render_mode = render_mode
         self.wall_hit = 0
         self.last_frame = time.time()
         self.framerate = 45
@@ -42,7 +43,7 @@ class SlimeEnvironment:
         self.timestep = 0
         self.slime.reset()
         self.ball.reset()
-        return self.getInputs()
+        return self.getInputs(), {}
 
     def scale(self, lst, s):
         return [x*s for x in lst]
@@ -71,7 +72,7 @@ class SlimeEnvironment:
             for i in range(self.skip_frames):
                 result = self.step(action, display=False, is_skip=True)
                 if result == -1:
-                    return self.getInputs(), -1, True
+                    return self.getInputs(), -1, True, False, {}
 
         slime = self.slime
 
@@ -143,15 +144,15 @@ class SlimeEnvironment:
                     self.ball.vel[1] = -self.ball.vel[1]
                     self.ball.pos[1] = self.net_level - self.ball.radius - 1
 
-        if display: self.display()
+        if self.render_mode=="human": self.display()
             
         # if touching ground
         if not slime_hit and self.ball.pos[1]+self.ball.radius > self.ground_level:
             if is_skip: return -1
-            else: return self.getInputs(), -1, True
+            else: return self.getInputs(), -1, True, False, {}
 
         # penalize ball being on side
-        return self.getInputs(), -.0001 + self.wall_hit, False
+        return self.getInputs(), -.0001 + self.wall_hit, False, False, {}
 
     def display(self):
         # fill in bg
@@ -187,6 +188,10 @@ class SlimeEnvironment:
 
     def convState(self, state):
         return torch.tensor([state], dtype=torch.float32)
+
+    def close(self):
+        if self.render_mode == "human":
+            cv2.destroyWindow("img")
     
 
 class Slime:

@@ -9,7 +9,8 @@ HEIGHT, WIDTH = 500, 500
 buffer = 0.05
 
 class DiepioEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="None"):
+        self.render_mode = render_mode
         self.stack = [np.zeros((80,80)) for i in range(4)]
         
         self.framerate = 20
@@ -41,7 +42,7 @@ class DiepioEnvironment:
         self.shapes = []
         for i in range(self.max_shapes):
             self.spawn_shape()
-        return self.getInputs()
+        return self.getInputs(), {}
 
     def getInputs(self):
         frame = self.display(resolution=((80,80)), display=False)
@@ -86,11 +87,11 @@ class DiepioEnvironment:
             bullet = Bullet(self.tank.angle + self.bullet_spread * (random.random()-0.5))
             self.bullets.append(bullet)
 
-        if display: self.display()
+        if self.render_mode == "human": self.display()
 
         if is_skip: return reward
 
-        return self.getInputs(), reward, 0
+        return self.getInputs(), reward, 0, 0, {}
 
     def display(self, resolution=(WIDTH,HEIGHT), display=True):
         img = np.array([[[204,204,204]]], dtype=np.uint8)
@@ -138,6 +139,7 @@ class DiepioEnvironment:
             return triangles[0][1]
         else:
             return np.argmax(square_counts)
+
             
 
 def get_angle(x, y):
@@ -270,14 +272,14 @@ if __name__ == '__main__':
     cv2.namedWindow('img')
     cv2.setMouseCallback('img', get_mouse_coordinates)
 
-    env = DiepioEnvironment()
+    env = DiepioEnvironment(render_mode="human")
     env.reset()
 
     while True:
-        #angle = math.atan2(MOUSE_COORDS[0]-WIDTH//2, MOUSE_COORDS[1]-HEIGHT//2) / math.pi * 180
-        #usr = round(angle / 360 * 32)
-        usr = env.get_expert_action()
-        env.step(usr, display=True)
+        angle = math.atan2(MOUSE_COORDS[0]-WIDTH//2, MOUSE_COORDS[1]-HEIGHT//2) / math.pi * 180
+        usr = round(angle / 360 * 32)
+        #usr = env.get_expert_action()
+        env.step(usr)
 
 
 

@@ -4,7 +4,8 @@ import keyboard as k
 import torch
 
 class CartPoleEnvironment:
-    def __init__(self, gravity=20, mass_cart=1.0, mass_pole=0.1, length=0.5, force_mag=15.0, dt=0.02):
+    def __init__(self, gravity=20, mass_cart=1.0, mass_pole=0.1, length=0.5, force_mag=15.0, dt=0.02, render_mode="None"):
+        self.render_mode=render_mode
         self.gravity = gravity
         self.mass_cart = mass_cart
         self.mass_pole = mass_pole
@@ -21,7 +22,7 @@ class CartPoleEnvironment:
         self.theta = np.pi + (random.random()-.5)/100  # Pole angle (upright)
         self.theta_dot = 0.0  # Pole angular velocity
         self.t = 0
-        return (self.x, self.theta-np.pi, self.x_dot, self.theta_dot)
+        return (self.x, self.theta-np.pi, self.x_dot, self.theta_dot), {}
 
     def step(self, action, display=False):
         action -= 1
@@ -48,9 +49,9 @@ class CartPoleEnvironment:
         # Calculate reward (1 for each step)
         reward = 1.0 if not done else -5.0
 
-        if display: self.display()
+        if self.render_mode=="human": self.display()
 
-        return (self.x, self.theta-np.pi, self.x_dot, self.theta_dot), reward, done
+        return (self.x, self.theta-np.pi, self.x_dot, self.theta_dot), reward, done, False, {}
 
     def display(self):
         framerate = 20
@@ -72,13 +73,17 @@ class CartPoleEnvironment:
         if self.theta + self.theta_dot + self.x_dot + [.8,1][abs(self.x)>1]*(self.x) > np.pi: return 2
         else: return 0
 
+    def close(self):
+        if self.render_mode=="human":
+            cv2.destroyWindow("img")
+
 
 if __name__ == '__main__':
     # Example usage:
     env = CartPoleEnvironment()
 
     for _ in range(100_000):
-        usr = 1
+        #usr = 1
         if k.is_pressed('a') or k.is_pressed('left'): usr = 0
         if k.is_pressed('d') or k.is_pressed('right'): usr = 2
 

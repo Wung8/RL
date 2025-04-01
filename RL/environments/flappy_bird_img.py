@@ -4,7 +4,8 @@ import keyboard as k
 import torch
 
 class FlappyBirdEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="None"):
+        self.render_mode = render_mode
         self.gravity = 10
         self.y = 300
         self.x = 200
@@ -27,7 +28,7 @@ class FlappyBirdEnvironment:
         self.pipe_gap = 500
 
         self.pipes = [[i*self.spacing + 1000, random.randint(*sorted([self.pipe_gap//2-25,600-self.pipe_gap//2+25])),self.pipe_gap] for i in range(4)]
-        return self.getInputs()
+        return self.getInputs(), {}
 
     def scale(self, lst, s):
         return [x*s for x in lst]
@@ -36,7 +37,7 @@ class FlappyBirdEnvironment:
         frame = self.display(resolution=(80,80), display=False)
         del self.stack[0]
         self.stack.append(frame)
-        return np.array(self.stack, dtype=np.float32)/255 - 0.5
+        return np.transpose(np.array(self.stack, dtype=np.float32), (1,2,0))
     
     def step(self, action, display=False):
         buffer = 6
@@ -55,9 +56,9 @@ class FlappyBirdEnvironment:
             closest_pipe = self.pipes[1]
             
         if self.y > 600:
-            return self.getInputs(), -1, -1
+            return self.getInputs(), -1, -1, 0, {}
         if self.y < 0:
-            return self.getInputs(), -1, -1
+            return self.getInputs(), -1, -1, 0, {}
 
         if self.pipes[0][0] < -self.pipe_width:
             self.pipes.append([self.pipes[-1][0]+self.spacing, random.randint(*sorted([self.pipe_gap//2-25,600-self.pipe_gap//2+25])),self.pipe_gap])
@@ -69,14 +70,14 @@ class FlappyBirdEnvironment:
         pipe_gap = closest_pipe[2]
         if 200-25-self.pipe_width-buffer < closest_pipe[0] < 200+25+buffer: # hit pipe
             if abs(closest_pipe[1]-self.y) > pipe_gap//2-25+buffer:
-                return self.getInputs(), min(-(abs(closest_pipe[1]-self.y) - (pipe_gap//2-25+buffer))/1000, -0.3), -1
+                return self.getInputs(), min(-(abs(closest_pipe[1]-self.y) - (pipe_gap//2-25+buffer))/1000, -0.3), -1, 0, {}
 
         reward = 1.0 if (closest_pipe[0] <= self.x and closest_pipe[0]+int(self.speed*self.dt) > self.x) else 0.01
 
-        if display: self.display()
+        if self.render_mode == "human": self.display()
 
         # y, y vel, pipe x, pipe y, next pipe x, next pipe y
-        return self.getInputs(), reward, 0
+        return self.getInputs(), reward, 0, 0, {}
 
     def display(self, resolution=(800,600), display=True):
         framerate = 30
@@ -108,6 +109,10 @@ class FlappyBirdEnvironment:
 
     def convState(self, state):
         return torch.tensor([state], dtype=torch.float32)
+
+    def close(self):
+        if self.render_mode == "human":
+            cv2.destroyWindow("img")
 
 
 if __name__ == '__main__':

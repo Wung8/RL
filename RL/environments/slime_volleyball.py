@@ -12,7 +12,8 @@ def mag(lst): return math.sqrt(sum(i**2 for i in lst))
 def turn_int(lst): return [int(i) for i in lst]
 
 class SlimeEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="none"):
+        self.render_mode = render_mode
         self.score = -1
         self.last_frame = time.time()
         self.framerate = 45
@@ -43,7 +44,7 @@ class SlimeEnvironment:
         self.slime_left.reset()
         self.slime_right.reset()
         self.ball.reset()
-        return (self.getInputs(), self.getInputs(left=False))
+        return (self.getInputs(), self.getInputs(left=False)), {}
 
     def scale(self, lst, s):
         return [x*s for x in lst]
@@ -74,7 +75,7 @@ class SlimeEnvironment:
                 result = self.step((action1, action2), display=False, is_skip=True)
                 if result == -1:
                     ball_side = 2*int(self.ball.pos[0] > self.screen_size[0]/2) - 1
-                    return (self.getInputs(), self.getInputs(left=False)), (ball_side, -ball_side), True
+                    return (self.getInputs(), self.getInputs(left=False)), (ball_side, -ball_side), True, False, {}
 
         # reverse p2
         if action2 == 2: action2 = 1
@@ -157,12 +158,12 @@ class SlimeEnvironment:
                     self.ball.vel[1] = -self.ball.vel[1]
                     self.ball.pos[1] = self.net_level - self.ball.radius - 1
 
-        if display: self.display()
+        if self.render_mode == "human": self.display()
             
         # if touching ground
         if not slime_hit and self.ball.pos[1]+self.ball.radius > self.ground_level:
             if is_skip: return -1
-            else: return (self.getInputs(), self.getInputs(left=False)), (ball_side, -ball_side), True
+            else: return (self.getInputs(), self.getInputs(left=False)), (ball_side, -ball_side), True, 0, {}
 
         bs_scale = 0
         r1, r2 = bs_scale * ball_side, bs_scale * -ball_side
@@ -176,7 +177,7 @@ class SlimeEnvironment:
         #rrr = self.ball.pos[0]/400
         #rrr = float(action1 == 1)*5
         #return (self.getInputs(), self.getInputs(left=False)), (rrr, .001 * -ball_side), (False, False)
-        return (self.getInputs(), self.getInputs(left=False)), (r1, r2), False
+        return (self.getInputs(), self.getInputs(left=False)), (r1, r2), False, False, {}
 
     def display(self):
         # fill in bg
@@ -222,6 +223,12 @@ class SlimeEnvironment:
         cv2.imshow('img', img)
         cv2.waitKey(max(int(1000/self.framerate-(time.time()-self.last_frame)), 1))
         self.last_frame = time.time()
+
+    def close(self):
+        if self.render_mode == "human":
+            cv2.destroyWindow("img")
+
+    
 
     
 

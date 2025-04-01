@@ -28,7 +28,8 @@ LOCS = {
 }
 
 class TMazeEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode='None'):
+        self.render_mode = render_mode
         self.screen_size = 13, 13
         self.surface = pygame.Surface(self.screen_size, pygame.SRCALPHA) 
         self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=pygame.HIDDEN)
@@ -50,7 +51,7 @@ class TMazeEnvironment:
         self.hint = random.choice(["blue", "green"])
         #self.hint = "blue"
         self.door1, self.door2 = [["blue", "green"], ["green", "blue"]][random.randint(0,1)]
-        return self.get_inputs()
+        return self.get_inputs(), {}
 
     def get_inputs(self):
         m = np.array(MAP,dtype=np.uint8)
@@ -65,8 +66,8 @@ class TMazeEnvironment:
                 if m[j][i] == 1: m[j][i] = self.colors["wall"]
                 if m[j][i] == 2: m[j][i] = self.colors["blue"]
                 if m[j][i] == 3: m[j][i] = self.colors["green"]
-        m = np.array(m, dtype=np.float32)/255
-        m = np.moveaxis(m, -1, 0)
+        #m = np.array(m, dtype=np.float32)/255
+        #m = np.moveaxis(m, -1, 0)
         return m
 
         
@@ -75,7 +76,7 @@ class TMazeEnvironment:
             self.screen = pygame.display.set_mode(np.multiply(self.screen_size, SCALE), flags=[pygame.HIDDEN, pygame.SHOWN][display])
         if actions == -1:
             if display: self.display()
-            return 0,0,0
+            return 0,0,0,0,{}
         if actions == 0 and MAP[self.player_pos[1]-1][self.player_pos[0]] != 1:
             self.player_pos = self.player_pos[0], self.player_pos[1]-1
         if actions == 1 and MAP[self.player_pos[1]][self.player_pos[0]+1] != 1:
@@ -85,15 +86,15 @@ class TMazeEnvironment:
         if actions == 3 and MAP[self.player_pos[1]][self.player_pos[0]-1] != 1:
             self.player_pos = self.player_pos[0]-1, self.player_pos[1]
 
-        if display: self.display()
+        if self.render_mode=="human": self.display()
         
         if self.player_pos == LOCS["door1"]:
-            if self.door1 == self.hint: return self.get_inputs(), 1, 1
-            else: return self.get_inputs(), -1, 1
+            if self.door1 == self.hint: return self.get_inputs(), 1, 1, 0, {}
+            else: return self.get_inputs(), -1, 1, 0, {}
         if self.player_pos == LOCS["door2"]:
-            if self.door2 == self.hint: return self.get_inputs(), 1, 1
-            else: return self.get_inputs(), -1, 1
-        return self.get_inputs(), -0.01, 0
+            if self.door2 == self.hint: return self.get_inputs(), 1, 1, 0, {}
+            else: return self.get_inputs(), -1, 1, 0, {}
+        return self.get_inputs(), -0.01, 0, 0, {}
     
     def display(self):
         pygame.event.pump()
@@ -112,6 +113,10 @@ class TMazeEnvironment:
         pygame.transform.scale(self.surface, (np.multiply(self.screen_size, SCALE)), self.screen)
         pygame.display.flip()
         self.clock.tick(10)
+
+    def close(self):
+        pygame.quit()
+        
         
 def get_user_actions():
     actions = -1

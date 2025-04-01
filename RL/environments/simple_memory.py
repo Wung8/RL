@@ -2,14 +2,15 @@ import numpy as np
 import random
 
 class SimpleMemoryEnvironment:
-    def __init__(self):
+    def __init__(self, render_mode="None"):
+        self.render_mode = render_mode
         self.reset()
 
     def reset(self):
         self.goal = random.choice([-1,1])
         self.pos = 0
         self.t = 0
-        return self.get_inputs()
+        return self.get_inputs(), {}
 
     def get_inputs(self):
         if self.t <= 2:
@@ -32,11 +33,11 @@ class SimpleMemoryEnvironment:
                 if self.pos <= 0:
                     self.pos += 1
 
-        if display: self.display()
+        if self.render_mode=="human": self.display()
 
         r = self.pos * self.goal
         done = 1 if self.t >= 8 else 0
-        return self.get_inputs(), r, done
+        return self.get_inputs(), r, done, 0, {}
 
     def display(self):
         toreturn = list('+.-')
@@ -49,5 +50,7 @@ class SimpleMemoryEnvironment:
         else:
             toreturn[self.pos + 1] = 'o'
         print(' '.join(toreturn))
+
+    def close(self): pass
         
             
