@@ -12,11 +12,13 @@ Implementations of PPO, IPPO, and DAgger from Pytorch and Numpy. Most methods ar
            
 Trained PPO agents:           
 
-![Untitled video - Made with Clipchamp (1)](https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334)
+https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334
            
-![Untitled video - Made with Clipchamp (2)](https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e)
+https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e
 
 https://github.com/user-attachments/assets/3758b081-8522-4acb-8ec8-cdfcba9e77c5
+
+https://github.com/user-attachments/assets/be57bc7e-f588-4a62-9884-cd277883756b
 
 
 
