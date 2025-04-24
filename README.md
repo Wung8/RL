@@ -14,6 +14,8 @@ Trained PPO agents:
            
 ![Untitled video - Made with Clipchamp (2)](https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e)
 
+![CarRacing](https://github.com/user-attachments/assets/47b52d96-1b9d-4c05-8c2e-543139adbe95)
+
 https://github.com/user-attachments/assets/3758b081-8522-4acb-8ec8-cdfcba9e77c5
 
 https://github.com/user-attachments/assets/be57bc7e-f588-4a62-9884-cd277883756b
