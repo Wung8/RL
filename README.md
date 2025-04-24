@@ -8,7 +8,11 @@ Two main files, one for Gymnasium environments, one for my custom environments. 
 To Do: DAgger, PPO finetune, and IPPO+LSTM are not working right now, however I'm ignoring that to work on DreamerV3.      
                        
            
-Trained PPO agents (deleted some of the clips whoops):           
+Trained PPO agents:
+
+https://github.com/user-attachments/assets/ef0a4d8b-bafd-406a-9028-88e794814334
+
+https://github.com/user-attachments/assets/87ed8a0c-32aa-47b0-8200-cdd14322831e
 
 https://github.com/user-attachments/assets/3758b081-8522-4acb-8ec8-cdfcba9e77c5
 
